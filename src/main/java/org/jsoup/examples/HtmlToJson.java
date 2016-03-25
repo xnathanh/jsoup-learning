@@ -2,11 +2,8 @@ package org.jsoup.examples;
 
 import org.jsoup.Jsoup;
 import org.jsoup.helper.StringUtil;
-import org.jsoup.helper.Validate;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
-import org.jsoup.nodes.TextNode;
+import org.jsoup.nodes.*;
+import org.jsoup.select.Elements;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
@@ -21,18 +18,31 @@ import java.io.IOException;
  *
  * @author Jonathan Hedley, jonathan@hedley.net
  */
-public class HtmlToPlainText {
+public class HtmlToJson {
     public static void main(String... args) throws IOException {
 //        Validate.isTrue(args.length == 1, "usage: supply url to fetch");
 //        String url = args[0];
-    String url="http://mrmlsmatrix.com/Matrix/p?ID=41937594713&rn=0&portalAction=item";
+    String url="http://mrmlsmatrix.com/Matrix/Public/Portal.aspx?ID=41937594713&rn=0&portalAction=item";
 //        String url="";
         // fetch the specified URL and parse to a HTML DOM
         Document doc = Jsoup.connect(url).get();
+        Elements scriptElements = doc.getElementsByTag("script");
+        for (Element element :scriptElements ){
+            for (DataNode node : element.dataNodes()) {
+                if(node.getWholeData().indexOf("ImageViewerClass")>-1){
+                    String a=node.getWholeData();
+                    String b=a.replaceAll("ImageViewerClass","mywordsg");
+                    String c=b.substring(b.indexOf("mywordsg"),b.lastIndexOf("mywordsg"));
+                    //Array d=c.split(",");
+                    System.out.println(c);
+                    System.out.println("-------------------");
+                }
+            }
 
-        HtmlToPlainText formatter = new HtmlToPlainText();
-        String plainText = formatter.getPlainText(doc);
-        System.out.println(plainText);
+        }
+//        HtmlToJson formatter = new HtmlToJson();
+//        String plainText = formatter.getPlainText(doc);
+//        System.out.println(plainText);
     }
 
     /**
@@ -57,12 +67,18 @@ public class HtmlToPlainText {
         // hit when the node is first seen
         public void head(Node node, int depth) {
             String name = node.nodeName();
-            if (node instanceof TextNode)
+            if (node instanceof TextNode) {
+                System.out.print(((TextNode) node).text());
                 append(((TextNode) node).text()); // TextNodes carry all user-readable text in the DOM.
-            else if (name.equals("li"))
+            }
+            else if (name.equals("li")) {
                 append("\n * ");
-            else if(name.equals("")){
-                System.out.print("a");
+            }
+            else if(name.equals("script")) {
+
+                if(((Element)node).text().indexOf("ImageViewerClass")>-1){
+                    System.out.print(depth + "---" + ((Element)node).text());
+                }
             }
         }
 
